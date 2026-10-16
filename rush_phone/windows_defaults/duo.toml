@@ -1,0 +1,101 @@
+# Windows 首次启动自动复制到 %LOCALAPPDATA%/RushPhone，后续启动不覆盖。
+# 结账和订单成功选择器沿用现有方案，实际页面仍需演练校准。
+[run]
+poll_interval_ms = 1000
+poll_jitter_ms = 200
+stock_refresh_interval_ms = 5000
+page_timeout_ms = 12000
+challenge_timeout_seconds = 300
+browser_channel = "chrome"
+
+[target]
+product_url = "https://www.apple.com.cn/shop/buy-iphone/iphone-duo"
+login_url = "https://secure.www.apple.com.cn/shop/account/home"
+
+[stock]
+prepare_click_selectors = [
+  'role=radio[name="${variables.color}"]',
+  'role=radio[name=/^${variables.capacity}/]',
+  'role=radio[name="不折抵换购"]',
+  'role=radio[name="不加 AppleCare+ 服务计划"]',
+]
+selector = 'button[data-autom="continueButton"]'
+mode = "enabled"
+
+[challenge]
+selectors = ["iframe[src*='captcha']", "iframe[title*='验证']", "text=请完成安全验证", "text=请输入验证码"]
+
+[variables]
+model = "iPhone Duo"
+color = "夜空色"
+capacity = "512GB"
+
+[[accounts]]
+name = "Apple账号"
+profile_dir = ".profiles/apple-cn-account-1"
+enabled = true
+
+[[flow.steps]]
+name = "选择颜色"
+action = "click"
+selector = 'role=radio[name="${variables.color}"]'
+
+[[flow.steps]]
+name = "选择容量"
+action = "click"
+selector = 'role=radio[name=/^${variables.capacity}/]'
+
+[[flow.steps]]
+name = "不折抵换购"
+action = "click"
+selector = 'role=radio[name="不折抵换购"]'
+
+[[flow.steps]]
+name = "不加 AppleCare"
+action = "click"
+selector = 'role=radio[name="不加 AppleCare+ 服务计划"]'
+
+[[flow.steps]]
+name = "继续"
+action = "click"
+selector = 'role=button[name="继续"]'
+
+[[flow.steps]]
+name = "等待加入购物袋"
+action = "wait_visible"
+selector = 'role=button[name=/加入.*购物袋/]'
+timeout_ms = 20000
+
+[[flow.steps]]
+name = "加入购物袋"
+action = "click"
+selector = 'role=button[name=/加入.*购物袋/]'
+
+[[flow.steps]]
+name = "等待结账"
+action = "wait_visible"
+selector = 'role=button[name=/结账/]'
+timeout_ms = 20000
+
+[[flow.steps]]
+name = "结账"
+action = "click"
+selector = 'role=button[name=/结账/]'
+
+[[flow.steps]]
+name = "等待最终下单按钮"
+action = "wait_visible"
+selector = 'role=button[name=/下单|提交订单/]'
+timeout_ms = 30000
+
+[[flow.steps]]
+name = "最终提交订单"
+action = "click"
+selector = 'role=button[name=/下单|提交订单/]'
+submit = true
+
+[[flow.steps]]
+name = "确认进入支付或订单成功页"
+action = "wait_visible"
+selector = 'role=heading[name=/支付|待付款|订单已提交|感谢/]'
+timeout_ms = 30000

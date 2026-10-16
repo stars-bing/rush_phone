@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rush-phone"
+version = "0.1.0"
+description = "少量账号并发、人工验证接管的网页抢购助手"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "playwright>=1.62,<2",
+  "psutil>=6,<8; sys_platform == 'win32'",
+  "pywin32>=306,<400; sys_platform == 'win32'",
+]
+
+[project.scripts]
+rush-phone = "rush_phone.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["rush_phone*"]
+
+[tool.setuptools.package-data]
+rush_phone = ["windows_defaults/*.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

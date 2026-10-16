@@ -1,0 +1,126 @@
+# 复制为 config.toml 后编辑。此示例使用占位 URL/选择器，不能直接下单。
+
+[run]
+# Python 不是这条链路的主要瓶颈；实际耗时主要来自网络、页面和站点响应。
+poll_interval_ms = 1000
+poll_jitter_ms = 200
+page_timeout_ms = 12000
+step_retries = 1
+challenge_timeout_seconds = 300
+keep_open_after_success_seconds = 900
+max_successful_orders = 1
+headless = false
+# 默认使用系统已安装的 Google Chrome；设为 "" 时使用 playwright install chromium 的浏览器。
+browser_channel = "chrome"
+
+[target]
+product_url = "https://shop.example.com/iphone-duo"
+login_url = "https://shop.example.com/login"
+
+[stock]
+# text：读取元素文字；enabled：可见且可点击；visible：只检查可见；attribute：读取属性。
+selector = "button[data-testid='buy-now']"
+mode = "text"
+available_terms = ["立即购买", "加入购物袋", "有货"]
+unavailable_terms = ["暂时缺货", "售罄", "无货"]
+# 某些商店要先选颜色才会启用容量按钮，可在每轮检查前执行轻量预选。
+# prepare_click_selectors = ['role=radio[name="夜空色"]']
+
+# 如果站点提供你有权使用的官方库存接口，可改用下面三项，通常比整页刷新更快。
+# probe_url = "https://shop.example.com/api/stock?sku=iphone-duo"
+# probe_available_regex = '"available"\s*:\s*true'
+# probe_unavailable_regex = '"available"\s*:\s*false'
+
+[challenge]
+# 只负责发现验证并暂停；验证由你在可视浏览器里人工完成，不绕过验证码。
+selectors = [
+  "iframe[src*='captcha']",
+  "[data-testid='captcha']",
+  "text=请完成安全验证",
+  "text=请输入验证码",
+]
+
+[variables]
+model = "iPhone Duo"
+color = "黑色"
+storage = "256GB"
+
+[[accounts]]
+name = "账号1"
+profile_dir = ".profiles/account-1"
+enabled = true
+
+[accounts.data]
+recipient = "张三"
+phone = "13800000000"
+address = "请替换为收货地址"
+
+[[accounts]]
+name = "账号2"
+profile_dir = ".profiles/account-2"
+enabled = false
+
+[accounts.data]
+recipient = "李四"
+phone = "13900000000"
+address = "请替换为收货地址"
+
+# 顺序执行的页面动作。选择器支持 Playwright selector（CSS、text= 等）。
+# submit=true 必须且只能标记最终“提交订单”按钮；普通 run 会停在这里做演练。
+[[flow.steps]]
+name = "选择机型"
+action = "click"
+selector = "text=${variables.model}"
+
+[[flow.steps]]
+name = "选择颜色"
+action = "click"
+selector = "text=${variables.color}"
+
+[[flow.steps]]
+name = "选择容量"
+action = "click"
+selector = "text=${variables.storage}"
+
+[[flow.steps]]
+name = "点击立即购买"
+action = "click"
+selector = "button[data-testid='buy-now']"
+after_ms = 200
+
+[[flow.steps]]
+name = "填写收件人"
+action = "fill"
+selector = "input[name='recipient']"
+value = "${account.data.recipient}"
+
+[[flow.steps]]
+name = "填写手机号"
+action = "fill"
+selector = "input[name='phone']"
+value = "${account.data.phone}"
+
+[[flow.steps]]
+name = "填写地址"
+action = "fill"
+selector = "textarea[name='address']"
+value = "${account.data.address}"
+
+[[flow.steps]]
+name = "同意条款"
+action = "check"
+selector = "input[name='terms']"
+optional = true
+
+[[flow.steps]]
+name = "提交订单"
+action = "click"
+selector = "button[data-testid='submit-order']"
+submit = true
+after_ms = 500
+
+[[flow.steps]]
+name = "等待待支付页"
+action = "wait_url"
+value = "**/payment/**"
+timeout_ms = 20000

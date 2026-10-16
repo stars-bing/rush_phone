@@ -1,0 +1,125 @@
+# Apple 中国大陆 iPhone Duo 专用起始模板。
+# 2026-09-10 已验证商品页 URL、颜色/容量/继续按钮选择器；结账页在预购开放前
+# 无法端到端验证，标为“待开售校准”的步骤必须先用演练模式核对。
+
+[run]
+poll_interval_ms = 1000
+poll_jitter_ms = 200
+page_timeout_ms = 12000
+step_retries = 1
+challenge_timeout_seconds = 300
+keep_open_after_success_seconds = 900
+max_successful_orders = 1
+headless = false
+browser_channel = "chrome"
+
+[target]
+product_url = "https://www.apple.com.cn/shop/buy-iphone/iphone-duo"
+login_url = "https://secure.www.apple.com.cn/shop/account/home"
+
+[stock]
+# 规格可选不等于可购买：完成配置后，检查真正的继续按钮。
+prepare_click_selectors = [
+  'role=radio[name="${variables.color}"]',
+  'role=radio[name=/^${variables.capacity}/]',
+  'role=radio[name="不折抵换购"]',
+  'role=radio[name="不加 AppleCare+ 服务计划"]',
+]
+selector = 'button[data-autom="continueButton"]'
+mode = "enabled"
+
+[challenge]
+selectors = [
+  "iframe[src*='captcha']",
+  "iframe[title*='验证']",
+  "text=请完成安全验证",
+  "text=请输入验证码",
+]
+
+[variables]
+# 可选颜色：星光白色、夜空色；可选容量：256GB、512GB、1TB、2TB。
+color = "夜空色"
+capacity = "256GB"
+
+[[accounts]]
+name = "账号1"
+profile_dir = ".profiles/apple-cn-account-1"
+enabled = true
+
+[[accounts]]
+name = "账号2"
+profile_dir = ".profiles/apple-cn-account-2"
+enabled = false
+
+# 以下 5 个商品配置步骤基于当前官方页面的可访问名称。
+[[flow.steps]]
+name = "选择颜色"
+action = "click"
+selector = 'role=radio[name="${variables.color}"]'
+
+[[flow.steps]]
+name = "选择容量"
+action = "click"
+selector = 'role=radio[name=/^${variables.capacity}/]'
+
+[[flow.steps]]
+name = "不折抵换购"
+action = "click"
+selector = 'role=radio[name="不折抵换购"]'
+
+[[flow.steps]]
+name = "不加 AppleCare"
+action = "click"
+selector = 'role=radio[name="不加 AppleCare+ 服务计划"]'
+
+[[flow.steps]]
+name = "继续"
+action = "click"
+selector = 'role=button[name="继续"]'
+
+# 从这里开始是依据 Apple Store 常规流程准备的候选选择器，预购开放前无法验证。
+# 首次运行不要加 --submit-order；演练发现不匹配时按实际按钮文案修改。
+[[flow.steps]]
+name = "等待加入购物袋（待开售校准）"
+action = "wait_visible"
+selector = 'role=button[name=/加入.*购物袋/]'
+timeout_ms = 20000
+
+[[flow.steps]]
+name = "加入购物袋（待开售校准）"
+action = "click"
+selector = 'role=button[name=/加入.*购物袋/]'
+
+[[flow.steps]]
+name = "等待结账（待开售校准）"
+action = "wait_visible"
+selector = 'role=button[name=/结账/]'
+timeout_ms = 20000
+
+[[flow.steps]]
+name = "结账（待开售校准）"
+action = "click"
+selector = 'role=button[name=/结账/]'
+
+# 账号预登录后，Apple Store 通常会使用账号中保存的配送资料；若实际页面仍要求补填，
+# 请按 config.example.toml 的 fill 示例在这里增加步骤。
+[[flow.steps]]
+name = "等待最终下单按钮（待开售校准）"
+action = "wait_visible"
+selector = 'role=button[name=/下单|提交订单/]'
+timeout_ms = 30000
+
+[[flow.steps]]
+name = "最终提交订单（待开售校准）"
+action = "click"
+selector = 'role=button[name=/下单|提交订单/]'
+submit = true
+
+# 此确认条件宁可严格超时，也不能把一次点击误判为下单成功。超时会停止其他账号并
+# 保留浏览器，让你人工检查，不会自动再次点击最终提交。
+[[flow.steps]]
+name = "确认进入支付或订单成功页（待开售校准）"
+action = "wait_visible"
+selector = 'role=heading[name=/支付|待付款|订单已提交|感谢/]'
+timeout_ms = 30000
+
