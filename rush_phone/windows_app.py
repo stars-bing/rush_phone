@@ -188,7 +188,8 @@ def self_test(report: Path) -> int:
                     owner.close()
         result = {"ok": True, "checks": checks}
     except Exception as exc:
-        result = {"ok": False, "checks": checks, "error": type(exc).__name__}
+        # 自检仅使用临时资料和离线页面；保留失败详情以便远程排查打包问题。
+        result = {"ok": False, "checks": checks, "error": type(exc).__name__, "detail": str(exc)}
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     return 0 if result["ok"] else 1

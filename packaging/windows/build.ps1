@@ -54,12 +54,12 @@ try {
             $Process.Kill()
             throw "Packaged smoke test timed out."
         }
+        if (Test-Path $ReportPath) { Get-Content $ReportPath -Raw }
         if ($Process.ExitCode -ne 0 -or -not (Test-Path $ReportPath)) {
             throw "Packaged smoke test failed. See .build/windows/smoke-report.json."
         }
         $Report = Get-Content $ReportPath -Raw | ConvertFrom-Json
         if (-not $Report.ok) { throw "Packaged smoke test failed." }
-        Get-Content $ReportPath -Raw
     } finally {
         foreach ($Name in $SavedEnvironment.Keys) {
             [Environment]::SetEnvironmentVariable($Name, $SavedEnvironment[$Name], "Process")
